@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_config.projectName }} | Interaktiv Ta'lim</title>
+    <!-- Modern Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(15, 23, 42, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-highlight: rgba(255, 255, 255, 0.2);
+            --text-light: #f8fafc;
+            --text-muted: #cbd5e1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ------------------ Dynamic Background ------------------ */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(to bottom right, #0B0B1A, #1A1A3A);
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: moveOrb 25s infinite alternate ease-in-out;
+        }
+        .orb-1 { width: 40vw; height: 40vw; background: var(--primary); top: -10vw; left: -10vw; }
+        .orb-2 { width: 35vw; height: 35vw; background: var(--secondary); bottom: -5vw; right: -10vw; animation-delay: -5s; animation-duration: 30s; }
+        .orb-3 { width: 30vw; height: 30vw; background: var(--accent); top: 40vh; left: 30vw; animation-delay: -10s; opacity: 0.3; }
+
+        @keyframes moveOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5vw, 10vh) scale(1.2); }
+            100% { transform: translate(-10vw, -5vh) scale(0.9); }
+        }
+
+        /* ------------------ Glassmorphism Utilities ------------------ */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+        }
+
+        /* ------------------ Animations ------------------ */
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.95) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); transform: scale(1); }
+            50% { box-shadow: 0 0 30px rgba(236, 72, 153, 0.8); transform: scale(1.05); }
+        }
+
+        /* --- 3D AI Loader --- */
+        .ai-loading-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px);
+            z-index: 15; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+        }
+        .ai-loading-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .ai-core-loader { position: relative; width: 150px; height: 150px; perspective: 800px; transform-style: preserve-3d; }
+        .ai-core-ring { position: absolute; border-radius: 50%; border: 4px solid transparent; transform-style: preserve-3d; }
+        .ai-core-ring:nth-child(1) {
+            width: 100%; height: 100%; top: 0; left: 0;
+            border-color: var(--primary) transparent var(--secondary) transparent;
+            animation: rotateA 2s linear infinite; filter: drop-shadow(0 0 10px var(--primary));
+        }
+        .ai-core-ring:nth-child(2) {
+            width: 80%; height: 80%; top: 10%; left: 10%;
+            border-color: transparent var(--accent) transparent #00bcd4;
+            animation: rotateB 2.5s linear infinite; filter: drop-shadow(0 0 10px var(--accent));
+        }
+        .ai-core-ring:nth-child(3) {
+            width: 60%; height: 60%; top: 20%; left: 20%;
+            border-color: #ffeb3b transparent var(--accent) transparent;
+            animation: rotateC 3s linear infinite; filter: drop-shadow(0 0 10px #ffeb3b);
+        }
+        .ai-core-center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 30px; height: 30px; background: radial-gradient(circle, #fff 0%, var(--primary) 50%, transparent 100%);
+            border-radius: 50%; box-shadow: 0 0 40px var(--primary), 0 0 60px var(--secondary);
+            animation: pulseCore 1.5s ease-in-out infinite alternate;
+        }
+        .ai-thinking-text {
+            margin-top: 40px; font-size: 1.3em; font-weight: 700; color: #fff;
+            text-shadow: 0 0 10px var(--primary); animation: textPulse 1.5s infinite alternate; font-family: 'Plus Jakarta Sans', sans-serif;
+            text-align: center;
+        }
+
+        @keyframes rotateA { 0% { transform: rotateX(70deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(70deg) rotateY(360deg) rotateZ(360deg); } }
+        @keyframes rotateB { 0% { transform: rotateX(120deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(120deg) rotateY(360deg) rotateZ(360deg); } }
+        @keyframes rotateC { 0% { transform: rotateX(35deg) rotateY(0deg) rotateZ(0deg); } 100% { transform: rotateX(35deg) rotateY(360deg) rotateZ(360deg); } }
+        @keyframes pulseCore { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; box-shadow: 0 0 60px var(--primary), 0 0 100px var(--accent); } }
+        @keyframes textPulse { 0% { opacity: 0.8; text-shadow: 0 0 5px var(--primary); } 100% { opacity: 1; text-shadow: 0 0 20px var(--accent); } }
+
+        .screen { display: none; width: 100%; min-height: 100vh; animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .screen.active { display: block; }
+
+        /* ------------------ Navbar ------------------ */
+        .navbar {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .logo i {
+            -webkit-text-fill-color: var(--primary);
+            font-size: 32px;
+        }
+
+        .nav-links { display: flex; gap: 30px; }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-links a:hover { color: #fff; }
+        .nav-links a::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            bottom: -5px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); transition: width 0.3s ease;
+        }
+        .nav-links a:hover::after { width: 100%; }
+
+        /* ------------------ Hero Section ------------------ */
+        .hero {
+            text-align: center;
+            padding: 80px 20px 40px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 30px;
+            color: #a5b4fc;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 4.5em;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+        .hero h1 span {
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25em;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 50px;
+            line-height: 1.6;
+        }
+
+        /* ------------------ Grades Section (Dynamic DOM) ------------------ */
+        .grades-section {
+            padding: 0 5% 100px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #fff;
+        }
+
+        .grades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+        }
+
+        .grade-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        
+        .grade-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+            z-index: 1; pointer-events: none;
+        }
+
+        .grade-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .grade-card-inner {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            overflow: hidden;
+        }
+
+        .grade-image {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 0.7s ease;
+            filter: brightness(0.8) contrast(1.1);
+        }
+
+        .grade-card:hover .grade-image {
+            transform: scale(1.15);
+            filter: brightness(1);
+        }
+
+        .grade-overlay {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(to top, rgba(15, 23, 42, 1) 0%, rgba(15, 23, 42, 0) 100%);
+            padding: 40px 24px 24px;
+            z-index: 2;
+            text-align: left;
+        }
+
+        .grade-icon {
+            position: absolute;
+            top: 20px; right: 20px;
+            font-size: 2.5em;
+            z-index: 2;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            transition: transform 0.3s ease;
+        }
+        .grade-card:hover .grade-icon { transform: rotate(15deg) scale(1.2); }
+
+        .grade-number {
+            font-size: 3.5em;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 8px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .grade-title {
+            font-size: 1.1em;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 2px;
+        }
+
+        /* ------------------ Grade 4 Topics Section ------------------ */
+        .grade4-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 5%;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .grade4-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .grade4-header h2 {
+            font-size: 3em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .topic-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .topic-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+
+        .topic-image-card {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .topic-info {
+            padding: 20px;
+        }
+
+        .topic-name {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .topic-character {
+            font-size: 0.9em;
+            color: var(--text-muted);
+            display: flex; align-items: center; gap: 6px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* ------------------ Lesson Screen (App Interface) ------------------ */
+        .lesson-container {
+            max-width: 1400px;
+            margin: 20px auto;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            height: calc(100vh - 40px);
+            padding: 0 20px;
+        }
+
+        .lesson-main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            height: 100%;
+        }
+
+        .lesson-header-glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 20px 30px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .lesson-title-area h2 { font-size: 1.6em; font-weight: 700; color: #fff; }
+        .lesson-title-area p { color: #94a3b8; font-size: 0.95em; margin-top: 4px; }
+
+        .media-container {
+            flex-grow: 1;
+            background: #000;
+            border-radius: 24px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .media-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative;}
+
+        .topic-image {
+            width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s;
+        }
+        .media-container:hover .topic-image { opacity: 1; }
+
+        .topic-video {
+            width: 100%; height: 100%; object-fit: cover; display: none;
+        }
+        .topic-video.active { display: block; }
+        /* Add cool glow when character is talking */
+        .topic-video.talking { animation: talkingGlow 2s infinite alternate; }
+        @keyframes talkingGlow { 0% { filter: drop-shadow(0 0 10px rgba(99,102,241,0)); } 100% { filter: drop-shadow(0 0 20px rgba(99,102,241,0.5)); } }
+
+
+        /* Premium Speech Bubble overlaying video */
+        .speech-container {
+            position: absolute; bottom: 40px; left: 0; right: 0;
+            display: flex; justify-content: center; z-index: 20;
+            pointer-events: none;
+        }
+        .speech-bubble {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 20px;
+            padding: 20px 30px;
+            max-width: 80%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 20px rgba(139, 92, 246, 0.1);
+            color: #fff;
+            transform: translateY(20px);
+            animation: slideInUp 0.4s ease forwards;
+        }
+        .speech-text {
+            font-size: 1.3em; line-height: 1.5; font-weight: 500;
+            letter-spacing: 0.2px; text-align: center;
+        }
+
+        /* Right Sidebar: Chat & Controls */
+        .lesson-sidebar {
+            display: flex; flex-direction: column; gap: 20px; height: 100%;
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 20px;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 15px; color: #fff; font-weight: 600; font-size: 1.1em;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .chat-messages {
+            flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
+            padding-right: 10px;
+        }
+        
+        /* Custom Scrollbar */
+        .chat-messages::-webkit-scrollbar { width: 6px; }
+        .chat-messages::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        .chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .chat-messages::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+
+        .message {
+            padding: 14px 18px; border-radius: 18px; font-size: 0.95em;
+            line-height: 1.5; max-width: 90%; animation: slideInUp 0.3s ease;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; margin-left: auto; border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .message.system {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0; margin-right: auto; border-bottom-left-radius: 4px;
+        }
+
+        .controls {
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 24px;
+            padding: 24px; text-align: center;
+        }
+
+        .record-btn {
+            width: 100%; padding: 18px; border-radius: 16px; border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; font-family: 'Outfit', sans-serif; font-size: 1.1em;
+            font-weight: 600; cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .record-btn:hover {
+            transform: translateY(-2px); box-shadow: 0 15px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .record-btn.recording {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            animation: pulseGlow 1.5s infinite;
+        }
+
+        .status { margin-top: 15px; color: #94a3b8; font-size: 0.9em; font-weight: 500; min-height: 48px; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+        .typing-dots i { margin: 0 2px; font-size: 6px; }
+        .pulse-fact { animation: fadeInScale 0.5s ease forwards; line-height: 1.4; }
+
+        @media (max-width: 1024px) {
+            .lesson-container { grid-template-columns: 1fr; height: auto; }
+            .media-container { height: 400px; }
+            .lesson-sidebar { height: 500px; }
+            .hero h1 { font-size: 3.5em; }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5em; }
+            .grades-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+            .topic-image-card { height: 150px; }
+            .media-container { height: 300px; }
+            .tutorial-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .tutorial-glass { padding: 25px; }
+            .tutorial-title h2 { font-size: 1.8em; }
+        }
+
+        /* ------------------ Tutorial Screen ------------------ */
+        .tutorial-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .tutorial-glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 30px;
+            padding: 40px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .tutorial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tutorial-title h2 {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .tutorial-title p {
+            color: var(--text-muted);
+            font-size: 1.1em;
+        }
+
+        .tutorial-video-wrapper {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .tutorial-video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .tutorial-skip-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 16px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+            font-family: 'Outfit', sans-serif;
+            white-space: nowrap;
+        }
+
+        .tutorial-skip-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        .tutorial-empty {
+            text-align: center;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .tutorial-empty-icon {
+            font-size: 5em;
+            color: rgba(255,255,255,0.2);
+            margin-bottom: 10px;
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        .tutorial-empty h2 {
+            font-size: 2.2em;
+            color: #fff;
+        }
+
+        .tutorial-empty p {
+            color: var(--text-muted);
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Ambient Animated Background across all screens -->
+    <div class="ambient-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- 1. BOSH SAHIFA / SINF TANLASH -->
+    <div id="gradesScreen" class="screen active">
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fa-solid fa-atom"></i>
+                <span>{{ app_config.projectName }}</span>
+            </div>
+            <div class="nav-links">
+                <a href="#">Xususiyatlar</a>
+                <a href="#">Darslar</a>
+                <a href="#">Bog'lanish</a>
+            </div>
+        </nav>
+
+        <div class="hero">
+            <div class="hero-badge">AI Yordamida O'qitish</div>
+            <h1>Kelajak ta'limiga <br><span>Xush kelibsiz!</span></h1>
+            <p>Interaktiv darsliklar, sun'iy idrok qahramonlari, va eng zamonaviy vizual muhit yordamida fanlarni o'rganish endi juda maroqli.</p>
+        </div>
+
+        <div class="grades-section">
+            <h2 class="section-title">O'quv sinfini tanlang</h2>
+            <div class="grades-grid" id="gradesGrid">
+                <!-- Javascript injects grade-cards here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAVZULAR SAHIFASI (4-SINF) -->
+    <div id="grade4Part2Screen" class="screen">
+        <div class="grade4-container">
+            <div class="top-bar">
+                <button class="back-btn" onclick="showGrades()">
+                    <i class="fas fa-arrow-left"></i> Orqaga
+                </button>
+            </div>
+            
+            <div class="grade4-header">
+                <h2>4-sinf Tabiiy fanlar</h2>
+                <div class="hero-badge">2-qism Mavzulari</div>
+            </div>
+            
+            <div class="topics-grid" id="topicsGrid">
+                <!-- Javascript injects topic-cards here -->
+                <div style="text-align: center; grid-column: 1/-1; color: var(--text-muted); padding: 50px;">
+                    <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary);"></i>
+                    <p style="margin-top: 15px;">Mavzular yuklanmoqda...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2.5 DARSLIK SAHIFASI (VIDEO TUTORIAL) -->
+    <div id="tutorialScreen" class="screen">
+        <div class="tutorial-container" id="tutorialContent">
+            <!-- Javascript injects tutorial content here -->
+        </div>
+    </div>
+
+    <!-- 3. DARS SAHIFASI (CHAT VA VIDEO) -->
+    <div id="lessonScreen" class="screen">
+        <div class="lesson-container">
+            
+            <!-- Left Side: Video Media -->
+            <div class="lesson-main">
+                <div class="lesson-header-glass">
+                    <div class="lesson-title-area">
+                        <h2 id="lessonTitle">Tabiiy fanlar</h2>
+                        <p id="lessonSubtitle">Mavzu qahramoni bilan tanishing</p>
+                    </div>
+                    <button class="back-btn" onclick="exitLesson()" style="padding: 10px 20px; font-size: 14px; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); color: #fca5a5;">
+                        <i class="fas fa-sign-out-alt"></i> Chiqish
+                    </button>
+                </div>
+
+                <div class="media-container">
+                    <div class="media-wrapper" style="position: relative;">
+                        <!-- DOM IDs exact match needed for JS -->
+                        <img id="topicImage" class="topic-image" src="" alt="Mavzu tasviri">
+                        <video id="topicVideo" class="topic-video" muted playsinline loop>
+                            <source src="" type="video/mp4">
+                        </video>
+                        
+                        <!-- 3D AI Loading Animation Overlay -->
+                        <div id="aiLoadingOverlay" class="ai-loading-overlay">
+                            <div class="ai-core-loader">
+                                <div class="ai-core-ring"></div>
+                                <div class="ai-core-ring"></div>
+                                <div class="ai-core-ring"></div>
+                                <div class="ai-core-center"></div>
+                            </div>
+                            <div class="ai-thinking-text">Sun'iy idrok javob tayyorlamoqda...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- AI Character speaking overlay -->
+                    <div class="speech-container" id="speechContainer" style="display: none;">
+                        <div class="speech-bubble">
+                            <div class="speech-text" id="speechText"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Chat & Voice Control -->
+            <div class="lesson-sidebar">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <i class="fa-solid fa-message-bot" style="color: var(--primary);"></i> Jonli Suhbat
+                    </div>
+                    <!-- Messages inject here -->
+                    <div class="chat-messages" id="chatMessages"></div>
+                </div>
+
+                <div class="controls">
+                    <!-- Voice Record Button -->
+                    <button id="recordButton" class="record-btn">
+                        <i class="fas fa-microphone"></i> Savolingizni ayting
+                    </button>
+                    <div class="status" id="status">Tinglashga tayyor</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentGrade = null;
+        let currentPart = null;
+        let currentTopic = null;
+        let currentTopicId = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+        let currentAudio = null;
+        let typingInterval = null;
+        let factInterval = null;
+
+        const APP_CONFIG = {{ app_config|tojson }};
+        const GRADE4_PART2_TOPICS = {{ grade4_part2_topics|tojson }};
+
+        // O'ylash fon musiqasi
+        let thinkingMusic = APP_CONFIG.thinkingMusicUrl ? new Audio(APP_CONFIG.thinkingMusicUrl) : null;
+        if (thinkingMusic) thinkingMusic.loop = true;
+
+        // 'Piliq' tugma bosilish ovozi
+        let uiAudioCtx = null;
+        function playClickSound() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!uiAudioCtx) uiAudioCtx = new AudioContext();
+            if (uiAudioCtx.state === 'suspended') uiAudioCtx.resume();
+            
+            const osc = uiAudioCtx.createOscillator();
+            const gain = uiAudioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, uiAudioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1500, uiAudioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, uiAudioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, uiAudioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(uiAudioCtx.destination);
+            osc.start();
+            osc.stop(uiAudioCtx.currentTime + 0.1);
+        }
+
+        // Sahifadagi hamma tugmalar uchun ovoz
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('.grade-card') || e.target.closest('.topic-card') || e.target.closest('a')) {
+                playClickSound();
+            }
+        });
+
+        const FUN_FACTS = [
+            "Bilasizmi? Tinch okeani eng katta okean hisoblanadi 🌊",
+            "Bilasizmi? Qushlar orasida faqat kolibri orqaga ucha oladi 🐦",
+            "Bilasizmi? Asalarilar 5 ta ko'zga ega 🐝",
+            "Bilasizmi? Eng katta sayyora planetamiz - Yupiter xisoblanadi 🪐",
+            "Bilasizmi? Suvning kimyoviy formulasi H2O 💧",
+            "Bilasizmi? Yer o'z o'qi atrofida aylanishi uchun 24 soat kerak 🌍",
+            "Bilasizmi? Fillarning xotirasi juda kuchli bo'ladi 🐘",
+            "Bilasizmi? Pingvinlar ucha olmaydi, lekin ajoyib suzuvchilar 🐧",
+            "Bilasizmi? Quyosh sistemamizdagi eng issiq sayyora Veneradir 🌡️",
+            "Bilasizmi? Oyning doim faqat bir tomoni yerga qarab turadi 🌔"
+        ];
+
+        function startLoadingFacts() {
+            // 3D Animatsiyani yoqish
+            const aiOverlay = document.getElementById('aiLoadingOverlay');
+            if (aiOverlay) aiOverlay.classList.add('active');
+
+            // Fon musiqasini chalish
+            if (thinkingMusic) {
+                thinkingMusic.currentTime = 0;
+                thinkingMusic.play().catch(e => console.log('Audio error:', e));
+            }
+
+            const statusDiv = document.getElementById('status');
+            let factIndex = Math.floor(Math.random() * FUN_FACTS.length);
+            
+            const updateFact = () => {
+                statusDiv.innerHTML = `<div class="pulse-fact">
+                    <i class="fas fa-magic" style="color: #FFC107;"></i> Qahramon javob tayyorlamoqda...<br>
+                    <span style="font-size: 0.85em; color: var(--accent); white-space: nowrap;">${FUN_FACTS[factIndex]}</span>
+                </div>`;
+            };
+            
+            updateFact();
+            factInterval = setInterval(() => {
+                factIndex = (factIndex + 1) % FUN_FACTS.length;
+                updateFact();
+            }, 3500); // Har 3.5 soniyada yangi fakt
+        }
+
+        function stopLoadingFacts() {
+            // 3D Animatsiyani o'chirish
+            const aiOverlay = document.getElementById('aiLoadingOverlay');
+            if (aiOverlay) aiOverlay.classList.remove('active');
+
+            // Fon musiqasini to'xtatish
+            if (thinkingMusic) {
+                thinkingMusic.pause();
+                thinkingMusic.currentTime = 0;
+            }
+
+            if (factInterval) {
+                clearInterval(factInterval);
+                factInterval = null;
+            }
+        }
+// Sinf kartalarini yuklash
+        function loadGrades() {
+            const gradesGrid = document.getElementById('gradesGrid');
+            gradesGrid.innerHTML = '';
+            const gradeData = APP_CONFIG.gradeCards;
+            
+            for (const grade of gradeData) {
+                const gradeCard = document.createElement('div');
+                gradeCard.className = 'grade-card';
+                gradeCard.onclick = () => {
+                    if (grade.number === '4') {
+                        showGrade4Part2Topics();
+                    } else {
+                        alert(`${grade.number}-sinf uchun darslar tayyorlanmoqda`);
+                    }
+                };
+                gradeCard.innerHTML = `
+                    <div class="grade-card-inner">
+                        <img src="${grade.image}" alt="${grade.number}-sinf" class="grade-image" 
+                             onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, ${grade.color}, ${grade.color}dd)'">
+                        <div class="grade-icon">${grade.icon}</div>
+                        <div class="grade-overlay">
+                            <div class="grade-number">${grade.number}</div>
+                            <div class="grade-title">${grade.number}-SINF</div>
+                        </div>
+                    </div>
+                `;
+                gradesGrid.appendChild(gradeCard);
+            }
+        }
+
+        // 4-sinf 2-qism mavzularini ko'rsatish
+        function showGrade4Part2Topics() {
+            const topicsGrid = document.getElementById('topicsGrid');
+            topicsGrid.innerHTML = '';
+            
+            for (const topic of GRADE4_PART2_TOPICS) {
+                const topicCard = document.createElement('div');
+                topicCard.className = 'topic-card';
+                topicCard.onclick = () => showTutorial(topic);
+                topicCard.innerHTML = `
+                    <img src="${topic.image}" alt="${topic.name}" class="topic-image-card" 
+                         onerror="this.src='https://via.placeholder.com/800x450?text=${topic.icon}+${topic.name}'">
+                    <div class="topic-info">
+                        <div class="topic-name">${topic.icon} ${topic.name}</div>
+                        <div class="topic-character">${topic.character}</div>
+                    </div>
+                `;
+                topicsGrid.appendChild(topicCard);
+            }
+            
+            document.getElementById('gradesScreen').classList.remove('active');
+            document.getElementById('grade4Part2Screen').classList.add('active');
+        }
+
+        function showGrades() {
+            document.getElementById('grade4Part2Screen').classList.remove('active');
+            document.getElementById('lessonScreen').classList.remove('active');
+            document.getElementById('tutorialScreen').classList.remove('active');
+            document.getElementById('gradesScreen').classList.add('active');
+        }
+
+        function showTutorial(topic) {
+            currentGrade = '4';
+            currentPart = 'II';
+            currentTopic = topic;
+            currentTopicId = topic.id;
+
+            const tutorialScreen = document.getElementById('tutorialScreen');
+            const tutorialContent = document.getElementById('tutorialContent');
+
+            const tutorialUrl = APP_CONFIG.tutorialVideos?.[topic.id] || '';
+            if (topic.id === 'tuproq' && tutorialUrl) {
+                tutorialContent.innerHTML = `
+                    <div class="tutorial-glass">
+                        <div class="tutorial-header">
+                            <div class="tutorial-title">
+                                <h2>${topic.name} - Videodarslik</h2>
+                                <p>Savol-javobga o'tishdan oldin ushbu qiziqarli darslikni tomosha qiling!</p>
+                            </div>
+                            <button class="tutorial-skip-btn" onclick="startLessonWithTopic(currentTopic)">
+                                Savol-javobni boshlash <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div class="tutorial-video-wrapper">
+                            <video id="tutorialVideo" src="${tutorialUrl}" controls autoplay playsinline></video>
+                        </div>
+                    </div>
+                `;
+            } else {
+                tutorialContent.innerHTML = `
+                    <div class="tutorial-glass tutorial-empty">
+                        <i class="fas fa-video-slash tutorial-empty-icon"></i>
+                        <h2>Darslik xozircha mavjud emas</h2>
+                        <p>Bu mavzu uchun videodarslik tez orada qo'shiladi. Hozircha siz sun'iy idrok qahramoni bilan savol-javob orqali bilimlaringizni sinab ko'rishingiz mumkin.</p>
+                        <button class="tutorial-skip-btn" onclick="startLessonWithTopic(currentTopic)" style="margin-top: 20px;">
+                            Savol-javobga o'tish yoxud boshlash <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                `;
+            }
+
+            document.getElementById('gradesScreen').classList.remove('active');
+            document.getElementById('grade4Part2Screen').classList.remove('active');
+            document.getElementById('lessonScreen').classList.remove('active');
+            tutorialScreen.classList.add('active');
+        }
+
+        function startLessonWithTopic(topic) {
+            const tutorialVideo = document.getElementById('tutorialVideo');
+            if (tutorialVideo) {
+                tutorialVideo.pause();
+                tutorialVideo.src = "";
+            }
+
+            currentGrade = '4';
+            currentPart = 'II';
+            currentTopic = topic;
+            currentTopicId = topic.id;
+            
+            document.getElementById('lessonTitle').textContent = `4-sinf, II-qism - ${topic.name}`;
+            document.getElementById('lessonSubtitle').textContent = topic.greeting;
+            
+            const topicImage = document.getElementById('topicImage');
+            topicImage.src = topic.image;
+            topicImage.style.display = 'block';
+            
+            const video = document.getElementById('topicVideo');
+            const videoSource = video.querySelector('source');
+            videoSource.src = topic.video;
+            video.load();
+            video.style.display = 'none';
+            video.classList.remove('active');
+            
+            document.getElementById('chatMessages').innerHTML = `<div class="message system">${topic.greeting}</div>`;
+            
+            document.getElementById('tutorialScreen').classList.remove('active');
+            document.getElementById('grade4Part2Screen').classList.remove('active');
+            document.getElementById('lessonScreen').classList.add('active');
+            
+            document.getElementById('speechContainer').style.display = 'none';
+            
+            setupMicrophone();
+        }
+
+        function exitLesson() {
+            if (currentAudio) {
+                if (currentAudio.src) {
+                    fetch('/delete_audio', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: currentAudio.src })
+                    }).catch(e => console.log(e));
+                }
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            if (typingInterval) {
+                clearInterval(typingInterval);
+                typingInterval = null;
+            }
+            
+            const video = document.getElementById('topicVideo');
+            video.pause();
+            video.style.display = 'none';
+            video.classList.remove('active');
+            
+            const image = document.getElementById('topicImage');
+            image.style.display = 'block';
+            
+            const speechContainer = document.getElementById('speechContainer');
+            speechContainer.style.display = 'none';
+            
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+            
+            isRecording = false;
+            const recordBtn = document.getElementById('recordButton');
+            recordBtn.classList.remove('recording');
+            recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Savolingizni ayting';
+            
+            document.getElementById('lessonScreen').classList.remove('active');
+            document.getElementById('gradesScreen').classList.add('active');
+            
+            currentGrade = null;
+            currentPart = null;
+            currentTopic = null;
+            currentTopicId = null;
+        }
+
+        async function setupMicrophone() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioChunks = [];
+                    await sendAudio(audioBlob);
+                };
+                
+                return true;
+            } catch (error) {
+                console.error('Mikrofon xatosi:', error);
+                document.getElementById('status').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Mikrofonga ruxsat bering!';
+                return false;
+            }
+        }
+
+        async function sendAudio(audioBlob) {
+            const statusDiv = document.getElementById('status');
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Faktlarni aylantirishni boshlash
+            startLoadingFacts();
+            
+            // Vaqtinchalik javob tayyorlanayotganligini ko'rsatuvchi xabar qo'shish
+            const typingId = 'typing-' + Date.now();
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message system typing';
+            typingDiv.id = typingId;
+            typingDiv.innerHTML = `<i class="fas fa-robot"></i> Javob tayyorlanmoqda <span class="typing-dots"><i class="fas fa-circle fa-beat"></i><i class="fas fa-circle fa-beat" style="animation-delay: 0.1s"></i><i class="fas fa-circle fa-beat" style="animation-delay: 0.2s"></i></span>`;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'question.webm');
+            formData.append('grade', '4');
+            formData.append('part', 'II');
+            if (currentTopicId) {
+                formData.append('topic_id', currentTopicId);
+            }
+            
+            try {
+                const response = await fetch('/process_audio', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                console.log('Server javobi:', data);
+                
+                stopLoadingFacts();
+                const typingMsg = document.getElementById(typingId);
+                if (typingMsg) typingMsg.remove();
+                
+                if (data.success) {
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Javob qabul qilindi!';
+                    addMessage('user', data.user_question);
+                    addMessage('system', data.ai_response);
+                    playResponse(data.audio_url, data.ai_response);
+                } else {
+                    statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Xatolik: ' + data.error;
+                    addMessage('system', '❌ Xatolik: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Xatolik:', error);
+                
+                stopLoadingFacts();
+                const typingMsg = document.getElementById(typingId);
+                if (typingMsg) typingMsg.remove();
+                
+                statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Serverga ulanishda xatolik!';
+                addMessage('system', '❌ Texnik xatolik yuz berdi!');
+            }
+        }
+
+        function playResponse(audioUrl, text) {
+            const topicImage = document.getElementById('topicImage');
+            const topicVideo = document.getElementById('topicVideo');
+            const speechContainer = document.getElementById('speechContainer');
+            const speechText = document.getElementById('speechText');
+            
+            topicImage.style.display = 'none';
+            topicVideo.style.display = 'block';
+            topicVideo.classList.add('active');
+            topicVideo.currentTime = 0;
+            topicVideo.play().catch(e => console.log('Video play:', e));
+            
+            speechContainer.style.display = 'flex';
+            speechText.textContent = '';
+            
+            let index = 0;
+            if (typingInterval) clearInterval(typingInterval);
+            
+            typingInterval = setInterval(() => {
+                if (index < text.length) {
+                    speechText.textContent += text[index];
+                    index++;
+                } else {
+                    clearInterval(typingInterval);
+                    typingInterval = null;
+                }
+            }, 30);
+            
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+            
+            currentAudio = new Audio(audioUrl);
+            currentAudio.onplay = () => {
+                topicVideo.classList.add('talking');
+            };
+            
+            currentAudio.onended = () => {
+                topicVideo.classList.remove('talking');
+                
+                fetch('/delete_audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: audioUrl })
+                }).catch(e => console.error("O'chirish xatosi:", e));
+                
+                setTimeout(() => {
+                    speechContainer.style.display = 'none';
+                    topicVideo.style.display = 'none';
+                    topicVideo.classList.remove('active');
+                    topicImage.style.display = 'block';
+                    if (typingInterval) {
+                        clearInterval(typingInterval);
+                        typingInterval = null;
+                    }
+                    speechText.textContent = '';
+                    currentAudio = null;
+                }, 500);
+            };
+            
+            currentAudio.onerror = (e) => {
+                console.error('Audio xatosi:', e);
+                topicVideo.classList.remove('talking');
+                
+                fetch('/delete_audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: audioUrl })
+                }).catch(e => console.error("O'chirish xatosi:", e));
+                
+                setTimeout(() => {
+                    speechContainer.style.display = 'none';
+                    topicVideo.style.display = 'none';
+                    topicImage.style.display = 'block';
+                    if (typingInterval) {
+                        clearInterval(typingInterval);
+                        typingInterval = null;
+                    }
+                }, 500);
+            };
+            
+            currentAudio.play().catch(e => console.error('Audio play:', e));
+        }
+
+        function addMessage(type, text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            
+            if (type === 'user') {
+                msgDiv.innerHTML = `<i class="fas fa-user"></i> ${text}`;
+            } else {
+                msgDiv.innerHTML = `<i class="fas fa-robot"></i> ${text}`;
+            }
+            
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function startRecording() {
+            if (!mediaRecorder) {
+                const ok = await setupMicrophone();
+                if (!ok) return;
+            }
+            
+            audioChunks = [];
+            mediaRecorder.start();
+            isRecording = true;
+            const recordBtn = document.getElementById('recordButton');
+            recordBtn.classList.add('recording');
+            recordBtn.innerHTML = '<i class="fas fa-stop"></i> To\'xtatish';
+            document.getElementById('status').innerHTML = '<i class="fas fa-microphone"></i> Gapiring...';
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                isRecording = false;
+                const recordBtn = document.getElementById('recordButton');
+                recordBtn.classList.remove('recording');
+                recordBtn.innerHTML = '<i class="fas fa-microphone"></i> Savolingizni ayting';
+                document.getElementById('status').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Javob olinmoqda...';
+            }
+        }
+
+        document.getElementById('recordButton').addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        document.getElementById('topicImage').addEventListener('click', () => {
+            if (!isRecording && currentTopic) {
+                startRecording();
+            }
+        });
+
+        loadGrades();
+    </script>
+</body>
+</html>

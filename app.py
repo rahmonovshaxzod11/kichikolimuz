@@ -16,6 +16,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 PROJECT_NAME = os.getenv("PROJECT_NAME", "KichikOlimUZ")
+IS_VERCEL = bool(os.getenv("VERCEL"))
+RUNTIME_DIR = os.getenv("TMPDIR", "/tmp") if IS_VERCEL else BASE_DIR
 
 def env_list(name):
     value = os.getenv(name, "")
@@ -48,8 +50,8 @@ MEDIA_URLS = load_media_urls()
 app = Flask(__name__)
 CORS(app)
 
-app.config['UPLOAD_FOLDER'] = os.getenv("UPLOAD_FOLDER", os.path.join(BASE_DIR, "uploads"))
-app.config['AUDIO_FOLDER'] = os.getenv("AUDIO_FOLDER", os.path.join(BASE_DIR, "static", "audio"))
+app.config['UPLOAD_FOLDER'] = os.getenv("UPLOAD_FOLDER", os.path.join(RUNTIME_DIR, "uploads"))
+app.config['AUDIO_FOLDER'] = os.getenv("AUDIO_FOLDER", os.path.join(RUNTIME_DIR, "audio"))
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -343,6 +345,10 @@ def index():
 def serve_static(filename):
     return send_from_directory('static', filename)
 
+@app.route('/audio/<path:filename>')
+def serve_audio(filename):
+    return send_from_directory(app.config['AUDIO_FOLDER'], filename)
+
 @app.route('/delete_audio', methods=['POST'])
 def delete_audio():
     data = request.json
@@ -426,14 +432,14 @@ def process_audio():
         if 'error' in tts_result:
             return jsonify({'success': False, 'error': tts_result['error']}), 500
         
-        tts_audio_path = os.path.join(app.config['AUDIO_FOLDER'], tts_result['url'].replace('/static/audio/', ''))
+        tts_audio_path = os.path.join(app.config['AUDIO_FOLDER'], os.path.basename(tts_result['url']))
         child_audio_filename = f"child_voice_{uuid.uuid4().hex}.wav"
         child_audio_path = os.path.join(app.config['AUDIO_FOLDER'], child_audio_filename)
         
         success = pitch_shift_with_pydub(tts_audio_path, child_audio_path, semitones=6)
         
         if success:
-            child_audio_url = f"/static/audio/{child_audio_filename}"
+            child_audio_url = f"/audio/{child_audio_filename}"
             # O'zgargan audio muvaffaqiyatli chiqqach, keraksiz asl MP3 ni o'chirib yuboramiz
             if os.path.exists(tts_audio_path):
                 os.remove(tts_audio_path)
@@ -555,7 +561,7 @@ def text_to_speech_with_retry(text, max_retries=4):
                 with open(audio_path, 'wb') as f:
                     f.write(response.content)
                 
-                return {'success': True, 'url': f"/static/audio/{audio_filename}"}
+                return {'success': True, 'url': f"/audio/{audio_filename}"}
             elif response.status_code == 402:
                 get_next_tts_token()
                 continue

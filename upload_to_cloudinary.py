@@ -42,7 +42,7 @@ def upload_file(file_path, public_id, resource_type="image"):
         print(f"  Yuklanmoqda: {file_path} -> {public_id} ({resource_type})")
         result = cloudinary.uploader.upload(
             file_path,
-            public_id=f"kichikOlimUZ/{public_id}",
+            public_id=f"UsmonLab/{public_id}",
             resource_type=resource_type,
             overwrite=True
         )

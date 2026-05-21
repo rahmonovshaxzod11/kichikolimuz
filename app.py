@@ -15,7 +15,7 @@ from itertools import cycle
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-PROJECT_NAME = os.getenv("PROJECT_NAME", "UsmonLab")
+PROJECT_NAME = os.getenv("PROJECT_NAME", "KichikOlimUZ")
 IS_VERCEL = bool(os.getenv("VERCEL"))
 RUNTIME_DIR = os.getenv("TMPDIR", "/tmp") if IS_VERCEL else BASE_DIR
 
